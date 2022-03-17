@@ -37,9 +37,8 @@ def start():
     print("Challenge started !\n")
     sys.stdout = open("data.txt", "w")
     data()
-    sys.stdout.close()
-    #day() this fails
-
+    sys.stdout = sys.__stdout__ #resets to default stdout
+    day()
 
 def day(num=1):
     start = False
@@ -54,6 +53,7 @@ def day(num=1):
                 print(line,end='')
         else:
             break
+    datafile.close()
 
 def mark():
     print("mark")
