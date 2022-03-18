@@ -1,10 +1,11 @@
 #!/usr/bin/env nix-shell
 #!nix-shell -i python3 -p "with python3Packages; [ beautifulsoup4 requests ]"
 
-import requests,sys
+import requests,sys,datetime,re
 from bs4 import BeautifulSoup
 
 URL = "https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/"
+prepday=1
 
 def data():
     page = requests.get(URL)
@@ -22,7 +23,7 @@ def data():
                     else:
                         for a in z.findAll("a",href=True):
                             if a.text=="YT":
-                                print("\t\t",a.text,'\t: ',a['href'])
+                                print("\t\t",a.text.replace("YT","YT_VID",1),': ',a['href'])
                             else:
                                 print("\t\t",a.text,': ',a['href'])
                 print("\n")
@@ -34,29 +35,46 @@ def data():
                 print("[",x.find("summary").text,"]\n\n",x.find("p").text)
 
 def start():
-    print("Challenge started !\n")
     sys.stdout = open("data.txt", "w")
     data()
-    sys.stdout = sys.__stdout__ #resets to default stdout
+    sys.stdout = open("progress.txt","w")
+    print("Challenge started on : ",datetime.datetime.now().strftime("%c"),"\n")
     day()
+    sys.stdout = sys.__stdout__
+    print(open("progress.txt").read())
 
-def day(num=1):
+def day(num=1,usefile="data.txt"):
     start = False
     start_day = "Day " + str(num)
-    end_day = "Day " + str(eval("int(num)+1")) + ":"
-    datafile = open("data.txt", "r")
-    for line in datafile:
-        if not end_day in line:
-            if start_day in line:
-                start = True
-            if start:
-                print(line,end='')
-        else:
-            break
-    datafile.close()
+    end_day = "Day " + str(eval("int(num)+1"))
+    with open(usefile, "r") as datafile:
+        for line in datafile:
+            if not end_day in line:
+                if start_day in line:
+                    start = True
+                if start:
+                    print(line,end='')
+            else:
+                break
 
 def mark():
-    print("mark")
+    with open("progress.txt","r") as datafile:
+        for line in datafile:
+            if line.startswith("[ Day"):
+                prepday = int(re.search(r'\d+', line).group())
+    print(open("complete.txt").read())
+    marklines = int(input("\nNo. of tasks done: "))
+    sys.stdout = open("complete.txt","w")
+    with open("progress.txt","r") as datafile:
+        for num, line in enumerate(datafile):
+            if line !="\n" and num >2 and marklines!=0:
+                if "[" in line:
+                    print("\t✅",line.replace("\t", "", 1),end="")
+                else:
+                    print("\t\t ✅",line.replace("\t", "",3),end="")
+                marklines -=1
+            else:
+                print(line,end="")
 
 def help():
     print("help")
