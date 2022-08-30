@@ -5,9 +5,10 @@ import requests,sys,datetime,re
 from bs4 import BeautifulSoup
 
 URL = "https://takeuforward.org/interviews/strivers-sde-sheet-top-coding-interview-problems/"
+functions = [ "start","syllabus", "day", "help", "mark" ]
 prepday=1
 
-def data():
+def syllabus():
     page = requests.get(URL)
     soup = BeautifulSoup(page.content, "html.parser")
     results = soup.findAll("details")
@@ -35,20 +36,20 @@ def data():
                 print("[",x.find("summary").text,"]\n\n",x.find("p").text)
 
 def start():
-    sys.stdout = open("data.txt", "w")
-    data()
-    sys.stdout = open("progress.txt","w")
+    sys.stdout = open("syllabus.txt", "w")
+    syllabus()
+    sys.stdout = open("day_syllabus.txt","w")
     print("Challenge started on : ",datetime.datetime.now().strftime("%c"),"\n")
     day()
     sys.stdout = sys.__stdout__
-    print(open("progress.txt").read())
+    print(open("day_syllabus.txt").read())
 
-def day(num=1,usefile="data.txt"):
+def day(num=1,usefile="syllabus.txt"):
     start = False
     start_day = "Day " + str(num)
     end_day = "Day " + str(eval("int(num)+1"))
-    with open(usefile, "r") as datafile:
-        for line in datafile:
+    with open(usefile, "r") as syllabusfile:
+        for line in syllabusfile:
             if not end_day in line:
                 if start_day in line:
                     start = True
@@ -58,33 +59,40 @@ def day(num=1,usefile="data.txt"):
                 break
 
 def mark():
-    with open("progress.txt","r") as datafile:
-        for line in datafile:
+    with open("day_syllabus.txt","r") as syllabusfile:
+        for line in syllabusfile:
             if line.startswith("[ Day"):
                 prepday = int(re.search(r'\d+', line).group())
-    print(open("complete.txt").read())
+
+    try:
+        print(open("progress.txt").read()) #using "r" works but gives <_io.TextIOWrapper name='progress.txt' mode='r' encoding='UTF-8'> too
+    except:
+        open("progress.txt","w")
+        print(open("progress.txt").read())
+
     marklines = int(input("\nNo. of tasks done: "))
-    sys.stdout = open("complete.txt","w")
-    with open("progress.txt","r") as datafile:
-        for num, line in enumerate(datafile):
+    sys.stdout = open("progress.txt","w")
+    with open("day_syllabus.txt","r") as syllabusfile:
+        for num, line in enumerate(syllabusfile):
             if line !="\n" and num >2 and marklines!=0:
-                if "[" in line:
-                    print("\t✅",line.replace("\t", "", 1),end="")
-                else:
-                    print("\t\t ✅",line.replace("\t", "",3),end="")
-                marklines -=1
+                if len(line) == len(line.encode()): #last checking if line already has the check/unicode char
+                    if "[" in line:
+                        print("\t✅",line.replace("\t", "", 1),end="")
+                    else:
+                        print("\t\t ✅",line.replace("\t", "",3),end="")
+                    marklines -=1
             else:
                 print(line,end="")
 
 def help():
-    print("help")
+    print("args this script accepts: ")
+    print(functions)
 
 if __name__ == '__main__':
-    functions = [ "start","data", "day", "help", "mark" ]
-    if sys.argv[1] in functions:
+    if len(sys.argv) >= 2 and sys.argv[1] in functions:
         if len(sys.argv) == 2:
             globals()[sys.argv[1]]()
         else:
             globals()[sys.argv[1]](sys.argv[2])
     else:
-        print("Invalid function !")
+        help()
